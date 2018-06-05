@@ -1,0 +1,502 @@
+//This macro combines all tests used from CT QA  for GE phantom for BMH 112
+// User is asked for filenames of all images.
+MonthNames = newArray("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec");
+getDateAndTime(year, month, dayOfWeek, dayOfMonth, hour, minute, second, msec);
+Y=toString(year);
+M=toString(MonthNames[month]);
+D=toString(dayOfMonth);
+DT = Y + M + D;
+//print(DT);
+
+
+	  
+												//High resolution QA more information
+
+										//High resolution QA
+
+open("C:\\temp\\ECT418\\view01.dcm");  					//open text file to write data
+
+
+
+setAutoThreshold();											//Thresholds the image
+
+
+//setTool(8);
+
+doWand(245, 118);											//Calls ImageJ's autoselection tool to select phantom
+
+
+getSelectionCoordinates(x,y);										//Gets coordinates of selection
+
+var xsum, ysum, xavg, yavg;										//Defines parameters for least squares circle fit
+var SUU, SUV, SVV, SUUU, SVVV, SUVV,SVUU;
+var C, F;
+
+
+
+
+SUU=0;													//Parameters initialized for least squares circle fit
+SUV=0;
+SVV=0;
+SUUU=0;
+SVVV=0;
+SUVV=0;
+SVUU=0;
+
+xsum=0;
+ysum=0;
+
+for(n=0; n<x.length; n++){
+	xsum=xsum+x[n];
+	ysum=ysum+y[n];
+	}
+
+xavg=xsum/x.length;
+yavg=ysum/y.length;
+
+for(i=0; i<x.length; i++){
+
+	SUU=(x[i]-xavg)*(x[i]-xavg)+SUU;								//Least squares circle fit regression
+	SUV=(x[i]-xavg)*(y[i]-yavg)+SUV;
+	SVV=(y[i]-yavg)*(y[i]-yavg)+SVV;
+	SUUU=(x[i]-xavg)*(x[i]-xavg)*(x[i]-xavg)+SUUU;
+	SVVV=(y[i]-yavg)*(y[i]-yavg)*(y[i]-yavg)+SVVV;
+	SUVV=(x[i]-xavg)*(y[i]-yavg)*(y[i]-yavg)+SUVV;
+	SVUU=(y[i]-yavg)*(x[i]-xavg)*(x[i]-xavg)+SVUU;
+}
+
+C=0.5*(SUUU+SUVV);
+F=0.5*(SVVV+SVUU);
+
+var uc, vc;
+
+vc=((F*SUU)-(SUV*C))/((SVV*SUU)-(SUV*SUV));
+
+uc=(C-(SUV*vc))/SUU;
+
+var xc, yc;
+
+xc=uc+xavg;												//Center of phantom calculated
+yc=vc+yavg;
+
+//print(xc+" "+yc);
+
+
+
+xa=262.085-xc;											//Shift from center of phantom to pre-defined center calculated
+ya=248.0749-yc;
+//xa=257.1258-xc;											//Shift from center of phantom to pre-defined center calculated
+//ya=249.8184-yc;
+
+
+//print(f, xa+" "+ya);
+
+
+
+run("Revert");												//Resets image to previous state, removes thresholding
+
+//set measurements to 0 decimals
+run("Set Measurements...", "area mean standard min perimeter median redirect=None decimal=0");
+
+//setTool(2);
+
+run("ROI Manager...");
+
+makeRectangle(187-xa, 178-ya, 20, 20);								//Creates ROIs at coordinates with shift and adds to ROI manager
+roiManager("Add");
+
+makeRectangle(227-xa, 101-ya, 20, 20);
+roiManager("Add");
+
+makePolygon(316-xa,163-ya,298-xa,181-ya,311-xa,195-ya,330-xa,177-ya);
+roiManager("Add");
+makePolygon(281-xa,196-ya,268-xa,209-ya,281-xa,224-ya,296-xa,210-ya);
+roiManager("Add");
+makePolygon(255-xa,227-ya,244-xa,239-ya,255-xa,251-ya,267-xa,238-ya);
+roiManager("Add");
+makePolygon(233-xa,257-ya,223-xa,266-ya,231-xa,275-ya,241-xa,265-ya);
+roiManager("Add");
+makePolygon(212-xa,283-ya,206-xa,289-ya,210-xa,294-ya,217-xa,288-ya);
+roiManager("Add");
+makePolygon(191-xa,305-ya,186-xa,310-ya,190-xa,313-ya,196-xa,308-ya);
+roiManager("Add");
+
+// capture images with ROI's
+//roiManager("Show All");
+//roiManager("Show All with labels");
+//roiManager("Show All");
+//run("Capture Image");
+//saveAs("Jpeg", "C:\\xampp\\htdocs\\CTQA\\ROIS\\ECT418\\\\view01.jpg");
+roiManager("Show All");
+run("From ROI Manager");
+saveAs("Jpeg", "C:\\xampp\\htdocs\\CTQA\\ROIs\\ECT418\\view01.jpg");
+
+roiManager("Measure");
+
+HRrect1mean = getResult("Mean", 0);
+HRrect1SD= getResult("StdDev", 0);
+
+HRrect2mean = getResult("Mean", 1);
+HRrect2SD = getResult("StdDev", 1);
+
+HRrect3mean = getResult("Mean", 2);
+HRrect3SD = getResult("StdDev", 2);
+
+HRrect4mean = getResult("Mean", 3);
+HRrect4SD = getResult("StdDev", 3);
+
+HRrect5mean = getResult("Mean", 4);
+HRrect5SD = getResult("StdDev", 4);
+
+HRrect6mean = getResult("Mean", 5);
+HRrect6SD = getResult("StdDev", 5);
+
+HRrect7mean = getResult("Mean", 6);
+HRrect7SD = getResult("StdDev", 6);
+
+HRrect8mean = getResult("Mean", 7);
+HRrect8SD = getResult("StdDev", 7);
+
+Diff = (HRrect1mean - HRrect2mean);
+
+roiManager("Delete");
+run("Clear Results");
+//print(f, "CT High Contrast Analysis for Standard reconstruction complete");
+
+
+close();
+
+//print(f, HRrect1mean + "\n" + HRrect1SD + "\n" + HRrect2mean + "\n");
+
+
+open("C:\\temp\\ECT418\\view02.dcm");
+
+
+
+setAutoThreshold();
+
+setThreshold(-1598, 15);
+
+
+
+//setTool(8);
+
+doWand(245, 118);
+
+getSelectionCoordinates(x, y);
+
+
+var xsum, ysum, xavg, yavg;
+var SUU, SUV, SVV, SUUU, SVVV, SUVV,SVUU;
+var C, F;
+
+
+
+
+SUU=0;
+SUV=0;
+SVV=0;
+SUUU=0;
+SVVV=0;
+SUVV=0;
+SVUU=0;
+
+xsum=0;
+ysum=0;
+
+for(n=0; n<x.length; n++){
+	xsum=xsum+x[n];
+	ysum=ysum+y[n];
+	}
+
+xavg=xsum/x.length;
+yavg=ysum/y.length;
+
+for(i=0; i<x.length; i++){
+
+	SUU=(x[i]-xavg)*(x[i]-xavg)+SUU;
+	SUV=(x[i]-xavg)*(y[i]-yavg)+SUV;
+	SVV=(y[i]-yavg)*(y[i]-yavg)+SVV;
+	SUUU=(x[i]-xavg)*(x[i]-xavg)*(x[i]-xavg)+SUUU;
+	SVVV=(y[i]-yavg)*(y[i]-yavg)*(y[i]-yavg)+SVVV;
+	SUVV=(x[i]-xavg)*(y[i]-yavg)*(y[i]-yavg)+SUVV;
+	SVUU=(y[i]-yavg)*(x[i]-xavg)*(x[i]-xavg)+SVUU;
+}
+
+C=0.5*(SUUU+SUVV);
+F=0.5*(SVVV+SVUU);
+
+var uc, vc;
+
+vc=((F*SUU)-(SUV*C))/((SVV*SUU)-(SUV*SUV));
+
+uc=(C-(SUV*vc))/SUU;
+
+var xc, yc;
+
+xc=uc+xavg;
+yc=vc+yavg;
+
+xa=262.085-xc;											//Shift from center of phantom to pre-defined center calculated
+ya=248.0749-yc;
+//print(f, xc +" "+ yc);
+//print(f, xa +" "+ ya);
+
+
+run("Revert");
+run("ROI Manager...");
+
+makeRectangle(211-xa, 166-ya, 100, 10);
+roiManager("Add");
+
+makeRectangle(211-xa, 217-ya, 100, 10);
+roiManager("Add");
+
+makeRectangle(211-xa, 270-ya, 100, 10);
+roiManager("Add");
+
+makeRectangle(211-xa, 324-ya, 100, 10);
+roiManager("Add");
+
+// capture images with ROI's
+roiManager("Show All");
+run("From ROI Manager");
+saveAs("Jpeg", "C:\\xampp\\htdocs\\CTQA\\ROIs\\ECT418\\view02.jpg");
+
+roiManager("Measure");
+
+LCrect1mean = getResult("Mean", 0);
+LCrect1SD = getResult("StdDev", 0);
+
+LCrect2mean = getResult("Mean", 1);
+LCrect2SD = getResult("StdDev", 1);
+
+LCrect3mean = getResult("Mean", 2);
+LCrect3SD = getResult("StdDev", 2);
+
+LCrect4mean = getResult("Mean", 3);
+LCrect4SD = getResult("StdDev", 3);
+
+LCSub1 = (LCrect2mean - LCrect1mean);
+LCSub2 = (LCrect3mean - LCrect4mean);
+
+roiManager("Delete");
+run("Clear Results");
+//print(f, "CT Low Contrast Analysis complete");
+
+close();
+
+//print(f, LCrect1mean + "\n");
+
+
+
+open("C:\\temp\\ECT418\\view03.dcm");
+
+
+
+setThreshold(-3024, -700);
+setAutoThreshold();
+
+
+doWand(57, 85);
+
+
+getSelectionCoordinates(x, y);
+
+
+var xsum, ysum, xavg, yavg;
+var SUU, SUV, SVV, SUUU, SVVV, SUVV,SVUU;
+var C, F;
+
+
+
+
+SUU=0;
+SUV=0;
+SVV=0;
+SUUU=0;
+SVVV=0;
+SUVV=0;
+SVUU=0;
+
+xsum=0;
+ysum=0;
+
+for(n=0; n<x.length; n++){
+	xsum=xsum+x[n];
+	ysum=ysum+y[n];
+	}
+
+xavg=xsum/x.length;
+yavg=ysum/y.length;
+
+for(i=0; i<x.length; i++){
+
+	SUU=(x[i]-xavg)*(x[i]-xavg)+SUU;
+	SUV=(x[i]-xavg)*(y[i]-yavg)+SUV;
+	SVV=(y[i]-yavg)*(y[i]-yavg)+SVV;
+	SUUU=(x[i]-xavg)*(x[i]-xavg)*(x[i]-xavg)+SUUU;
+	SVVV=(y[i]-yavg)*(y[i]-yavg)*(y[i]-yavg)+SVVV;
+	SUVV=(x[i]-xavg)*(y[i]-yavg)*(y[i]-yavg)+SUVV;
+	SVUU=(y[i]-yavg)*(x[i]-xavg)*(x[i]-xavg)+SVUU;
+}
+
+C=0.5*(SUUU+SUVV);
+F=0.5*(SVVV+SVUU);
+
+var uc, vc;
+
+vc=((F*SUU)-(SUV*C))/((SVV*SUU)-(SUV*SUV));
+
+uc=(C-(SUV*vc))/SUU;
+
+var xc, yc;
+
+xc=uc+xavg;
+yc=vc+yavg;
+
+//print(xc +" "+ yc);
+
+xa=262.3679-xc;											//Shift from center of phantom to pre-defined center calculated
+ya=247.3173-yc;
+
+//print(xa+" "+ya);
+run("Revert");
+
+//setTool(0);
+
+
+makeRectangle(242-xa, 226-ya, 40, 40);
+run("ROI Manager...");
+roiManager("Add");
+
+makeRectangle(242-xa, 76-ya, 40, 40); 
+roiManager("Add");
+
+makeRectangle(92-xa, 226-ya, 40, 40); 
+roiManager("Add");
+
+makeRectangle(242-xa, 376-ya, 40, 40); 
+roiManager("Add");
+
+makeRectangle(392-xa, 226-ya, 40, 40); 
+roiManager("Add");
+
+// capture images with ROI's
+//roiManager("Show All");
+//roiManager("Show All with labels");
+//roiManager("Show All");
+//run("Capture Image");
+//saveAs("Jpeg", "C:\\xampp\\htdocs\\CTQA\\ROIS\\ECT418\\\\view03.jpg");
+roiManager("Show All");
+run("From ROI Manager");
+saveAs("Jpeg", "C:\\xampp\\htdocs\\CTQA\\ROIs\\ECT418\\view03.jpg");
+
+roiManager("Measure");
+
+
+UNrect1mean = getResult("Mean", 0);
+UNrect1SD = getResult("StdDev", 0);
+
+UNrect2mean = getResult("Mean", 1);
+UNrect2SD = getResult("StdDev", 1);
+
+UNrect3mean = getResult("Mean", 2);
+UNrect3SD = getResult("StdDev", 2);
+
+UNrect4mean = getResult("Mean", 3);
+UNrect4SD = getResult("StdDev", 3);
+
+UNrect5mean = getResult("Mean", 4);
+UNrect5SD = getResult("StdDev", 4);
+
+UNDiff = (UNrect1mean - UNrect2mean);
+
+roiManager("Delete");
+
+run("Clear Results");
+close();
+nf = "C:/images/logs/ECT418/ECT418_" + DT + ".txt";
+f=File.open(nf); 
+
+// High Contrast Data
+print(f, "ContrastDiff " + Diff);
+print(f, "\n");
+print(f, "HRrect1mean " + HRrect1mean);
+print(f, "\n");
+print(f, "HRrect1SD " + HRrect1SD);
+print(f, "\n");
+print(f, "HRrect2mean " + HRrect2mean);
+print(f, "\n");
+print(f, "HRrect2SD " + HRrect2SD);
+print(f, "\n");
+print(f, "HRrect3mean " + HRrect3mean);
+print(f, "\n");
+print(f, "HRrect3SD " + HRrect3SD);
+print(f, "\n");
+print(f, "HRrect4mean " + HRrect4mean);
+print(f, "\n");
+print(f, "HRrect4SD " + HRrect4SD);
+print(f, "\n");
+print(f, "HRrect5mean " + HRrect5mean);
+print(f, "\n");
+print(f, "HRrect5SD " + HRrect5SD);
+print(f, "\n");
+print(f, "HRrect6mean " + HRrect6mean);
+print(f, "\n");
+print(f, "HRrect6SD " + HRrect6SD);
+print(f, "\n");
+print(f, "HRrect7mean " + HRrect7mean);
+print(f, "\n");
+print(f, "HRrect7SD " + HRrect7SD);
+print(f, "\n");
+print(f, "HRrect8mean " + HRrect8mean);
+print(f, "\n");
+print(f, "HRrect8SD " + HRrect8SD);
+print(f, "\n");
+// Low Contrast Data
+print(f, "LCSub1 " + LCSub1);
+print(f, "\n");
+print(f, "LCSub2 " + LCSub2);
+print(f, "\n");
+print(f, "LCrect1mean " + LCrect1mean);
+print(f, "\n");
+print(f, "LCrect1SD " + LCrect1SD);
+print(f, "\n");
+print(f, "LCrect2mean " + LCrect2mean);
+print(f, "\n");
+print(f, "LCrect2SD " + LCrect2SD);
+print(f, "\n");
+print(f, "LCrect3mean " + LCrect3mean);
+print(f, "\n");
+print(f, "LCrect3SD " + LCrect3SD);
+print(f, "\n");
+print(f, "LCrect4mean " + LCrect4mean);
+print(f, "\n");
+print(f, "LCrect4SD " + LCrect4SD);
+print(f, "\n");
+// Uniformity Data
+print(f, "UNrect1mean " + UNrect1mean);
+print(f, "\n");
+print(f, "UNrect1SD " + UNrect1SD);
+print(f, "\n");
+print(f, "UNrect2mean " + UNrect2mean);
+print(f, "\n");
+print(f, "UNrect2SD " + UNrect2SD);
+print(f, "\n");
+print(f, "UNrect3mean " + UNrect3mean);
+print(f, "\n");
+print(f, "UNrect3SD " + UNrect3SD);
+print(f, "\n");
+print(f, "UNrect4mean " + UNrect4mean);
+print(f, "\n");
+print(f, "UNrect4SD " + UNrect4SD);
+print(f, "\n");
+print(f, "UNrect5mean " + UNrect5mean);
+print(f, "\n");
+print(f, "UNrect5SD " + UNrect5SD);
+print(f, "\n");
+print(f, "UNDiff " + UNDiff);
+print(f, "\n");
+
+run("Quit");

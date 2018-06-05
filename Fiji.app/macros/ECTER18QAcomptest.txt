@@ -1,0 +1,520 @@
+//This macro combines all tests used from CT QA  for GE phantom for BMH 112
+// User is asked for filenames of all images.
+MonthNames = newArray("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec");
+getDateAndTime(year, month, dayOfWeek, dayOfMonth, hour, minute, second, msec);
+Y=toString(year);
+M=toString(MonthNames[month]);
+D=toString(dayOfMonth);
+DT = Y + M + D;
+//print(DT);
+	  
+												//High resolution QA more information
+
+												//High resolution QA
+
+												//open text file to write data
+open("C:\\temp\\ECTER18\\view01.dcm"); 
+
+
+setAutoThreshold();											//Thresholds the image
+
+
+//setTool(8);
+
+doWand(245, 118);											//Calls ImageJ's autoselection tool to select phantom
+
+
+getSelectionCoordinates(x,y);										//Gets coordinates of selection
+
+var xsum, ysum, xavg, yavg;										//Defines parameters for least squares circle fit
+var SUU, SUV, SVV, SUUU, SVVV, SUVV,SVUU;
+var C, F;
+
+
+
+
+SUU=0;													//Parameters initialized for least squares circle fit
+SUV=0;
+SVV=0;
+SUUU=0;
+SVVV=0;
+SUVV=0;
+SVUU=0;
+
+xsum=0;
+ysum=0;
+
+for(n=0; n<x.length; n++){
+	xsum=xsum+x[n];
+	ysum=ysum+y[n];
+	}
+
+xavg=xsum/x.length;
+yavg=ysum/y.length;
+
+for(i=0; i<x.length; i++){
+
+	SUU=(x[i]-xavg)*(x[i]-xavg)+SUU;								//Least squares circle fit regression
+	SUV=(x[i]-xavg)*(y[i]-yavg)+SUV;
+	SVV=(y[i]-yavg)*(y[i]-yavg)+SVV;
+	SUUU=(x[i]-xavg)*(x[i]-xavg)*(x[i]-xavg)+SUUU;
+	SVVV=(y[i]-yavg)*(y[i]-yavg)*(y[i]-yavg)+SVVV;
+	SUVV=(x[i]-xavg)*(y[i]-yavg)*(y[i]-yavg)+SUVV;
+	SVUU=(y[i]-yavg)*(x[i]-xavg)*(x[i]-xavg)+SVUU;
+}
+
+C=0.5*(SUUU+SUVV);
+F=0.5*(SVVV+SVUU);
+
+var uc, vc;
+
+vc=((F*SUU)-(SUV*C))/((SVV*SUU)-(SUV*SUV));
+
+uc=(C-(SUV*vc))/SUU;
+
+var xc, yc;
+
+xc=uc+xavg;												//Center of phantom calculated
+yc=vc+yavg;
+
+//print(f, xc+" "+yc);
+
+
+xa=254.9351-xc;											//Shift from center of phantom to pre-defined center calculated
+ya=257.9906-yc;
+
+
+//print(f, xa+" "+ya);
+
+
+
+run("Revert");												//Resets image to previous state, removes thresholding
+
+//set measurements to 0 decimals
+run("Set Measurements...", "area mean standard min perimeter median redirect=None decimal=0");
+
+//setTool("rectangle");
+
+run("ROI Manager...");
+
+makeRectangle(155-xa, 354-ya, 25, 25);								//Creates ROIs at coordinates with shift and adds to ROI manager
+roiManager("Add");
+
+makeRectangle(322-xa, 324-ya, 25, 25);
+roiManager("Add");
+
+//setTool("polygon");
+makePolygon(308-xa,173-ya,291-xa,193-ya,306-xa,208-ya,324-xa,188-ya);
+roiManager("Add");
+makePolygon(276-xa,208-ya,263-xa,222-ya,277-xa,238-ya,291-xa,222-ya);
+roiManager("Add");
+makePolygon(249-xa,238-ya,237-xa,249-ya,249-xa,260-ya,261-xa,249-ya);
+roiManager("Add");
+makePolygon(227-xa,267-ya,218-xa,276-ya,225-xa,286-ya,234-xa,276-ya);
+roiManager("Add");
+makePolygon(205-xa,292-ya,199-xa,298-ya,205-xa,305-ya,211-xa,298-ya);
+roiManager("Add");
+makePolygon(186-xa,314-ya,180-xa,319-ya,184-xa,324-ya,190-xa,319-ya);
+roiManager("Add");
+
+// Save ROIs Jpegs
+roiManager("Show All");
+run("From ROI Manager");
+saveAs("Jpeg", "C:\\xampp\\htdocs\\CTQA\\ROIs\\ECTER18\\view01.jpg");
+
+roiManager("Measure");
+
+HRrect1mean = getResult("Mean", 0);
+HRrect1SD= getResult("StdDev", 0);
+
+HRrect2mean = getResult("Mean", 1);
+HRrect2SD = getResult("StdDev", 1);
+
+HRrect3mean = getResult("Mean", 2);
+HRrect3SD = getResult("StdDev", 2);
+
+HRrect4mean = getResult("Mean", 3);
+HRrect4SD = getResult("StdDev", 3);
+
+HRrect5mean = getResult("Mean", 4);
+HRrect5SD = getResult("StdDev", 4);
+
+HRrect6mean = getResult("Mean", 5);
+HRrect6SD = getResult("StdDev", 5);
+
+HRrect7mean = getResult("Mean", 6);
+HRrect7SD = getResult("StdDev", 6);
+
+HRrect8mean = getResult("Mean", 7);
+HRrect8SD = getResult("StdDev", 7);
+
+Diff = (HRrect1mean - HRrect2mean);
+
+
+roiManager("Delete");
+run("Clear Results");
+//print(f, "CT High Contrast Analysis for Standard reconstruction complete");
+
+
+close();
+
+//print(f, HRrect1mean + "\n" + HRrect1SD + "\n" + HRrect2mean + "\n");
+
+
+
+open("C:\\temp\\ECTER18\\view02.dcm");
+
+
+
+setThreshold(-3024, -700);
+setAutoThreshold();
+
+
+doWand(57, 85);
+
+
+getSelectionCoordinates(x, y);
+
+
+var xsum, ysum, xavg, yavg;
+var SUU, SUV, SVV, SUUU, SVVV, SUVV,SVUU;
+var C, F;
+
+
+
+
+SUU=0;
+SUV=0;
+SVV=0;
+SUUU=0;
+SVVV=0;
+SUVV=0;
+SVUU=0;
+
+xsum=0;
+ysum=0;
+
+for(n=0; n<x.length; n++){
+	xsum=xsum+x[n];
+	ysum=ysum+y[n];
+	}
+
+xavg=xsum/x.length;
+yavg=ysum/y.length;
+
+for(i=0; i<x.length; i++){
+
+	SUU=(x[i]-xavg)*(x[i]-xavg)+SUU;
+	SUV=(x[i]-xavg)*(y[i]-yavg)+SUV;
+	SVV=(y[i]-yavg)*(y[i]-yavg)+SVV;
+	SUUU=(x[i]-xavg)*(x[i]-xavg)*(x[i]-xavg)+SUUU;
+	SVVV=(y[i]-yavg)*(y[i]-yavg)*(y[i]-yavg)+SVVV;
+	SUVV=(x[i]-xavg)*(y[i]-yavg)*(y[i]-yavg)+SUVV;
+	SVUU=(y[i]-yavg)*(x[i]-xavg)*(x[i]-xavg)+SVUU;
+}
+
+C=0.5*(SUUU+SUVV);
+F=0.5*(SVVV+SVUU);
+
+var uc, vc;
+
+vc=((F*SUU)-(SUV*C))/((SVV*SUU)-(SUV*SUV));
+
+uc=(C-(SUV*vc))/SUU;
+
+var xc, yc;
+
+xc=uc+xavg;
+yc=vc+yavg;
+
+print(xc +" "+ yc);
+
+xa= 253.2322-xc;
+ya= 260.4621-yc;
+
+
+//print(xa+" "+ya);
+
+run("Revert");
+
+//setTool(0);
+
+run("ROI Manager...");
+makeOval(235-xa, 235-ya, 40, 40);
+//makeRectangle(237-xa, 228-ya, 40, 40);
+
+roiManager("Add");
+
+makeOval(235-xa, 112-ya, 40, 40); 
+roiManager("Add");
+
+makeOval(94-xa, 234-ya, 40, 40); 
+roiManager("Add");
+
+makeOval(236-xa, 350-ya, 40, 40); 
+roiManager("Add");
+
+makeOval(378-xa, 236-ya, 40, 40); 
+roiManager("Add");
+
+// Save ROIs Jpegs
+roiManager("Show All");
+run("From ROI Manager");
+saveAs("Jpeg", "C:\\xampp\\htdocs\\CTQA\\ROIs\\ECTER18\\view02.jpg");
+
+
+roiManager("Measure");
+
+
+UNrect1mean = getResult("Mean", 0);
+UNrect1SD = getResult("StdDev", 0);
+
+UNrect2mean = getResult("Mean", 1);
+UNrect2SD = getResult("StdDev", 1);
+
+UNrect3mean = getResult("Mean", 2);
+UNrect3SD = getResult("StdDev", 2);
+
+UNrect4mean = getResult("Mean", 3);
+UNrect4SD = getResult("StdDev", 3);
+
+UNrect5mean = getResult("Mean", 4);
+UNrect5SD = getResult("StdDev", 4);
+
+UNDiff = (UNrect1mean - UNrect2mean);
+
+roiManager("Delete");
+
+run("Clear Results");
+close();
+
+// Helical Image
+open("C:\\temp\\ECTER18\\viewH01.dcm");
+
+
+
+setThreshold(-3024, -700);
+setAutoThreshold();
+
+
+doWand(57, 85);
+
+
+getSelectionCoordinates(x, y);
+
+
+var xsum, ysum, xavg, yavg;
+var SUU, SUV, SVV, SUUU, SVVV, SUVV,SVUU;
+var C, F;
+
+
+
+
+SUU=0;
+SUV=0;
+SVV=0;
+SUUU=0;
+SVVV=0;
+SUVV=0;
+SVUU=0;
+
+xsum=0;
+ysum=0;
+
+for(n=0; n<x.length; n++){
+	xsum=xsum+x[n];
+	ysum=ysum+y[n];
+	}
+
+xavg=xsum/x.length;
+yavg=ysum/y.length;
+
+for(i=0; i<x.length; i++){
+
+	SUU=(x[i]-xavg)*(x[i]-xavg)+SUU;
+	SUV=(x[i]-xavg)*(y[i]-yavg)+SUV;
+	SVV=(y[i]-yavg)*(y[i]-yavg)+SVV;
+	SUUU=(x[i]-xavg)*(x[i]-xavg)*(x[i]-xavg)+SUUU;
+	SVVV=(y[i]-yavg)*(y[i]-yavg)*(y[i]-yavg)+SVVV;
+	SUVV=(x[i]-xavg)*(y[i]-yavg)*(y[i]-yavg)+SUVV;
+	SVUU=(y[i]-yavg)*(x[i]-xavg)*(x[i]-xavg)+SVUU;
+}
+
+C=0.5*(SUUU+SUVV);
+F=0.5*(SVVV+SVUU);
+
+var uc, vc;
+
+vc=((F*SUU)-(SUV*C))/((SVV*SUU)-(SUV*SUV));
+
+uc=(C-(SUV*vc))/SUU;
+
+var xc, yc;
+
+xc=uc+xavg;
+yc=vc+yavg;
+
+print(xc +" "+ yc);
+
+xa= 253.2322-xc;
+ya= 260.4621-yc;
+
+
+//print(xa+" "+ya);
+
+run("Revert");
+
+//setTool(0);
+
+run("ROI Manager...");
+makeOval(235-xa, 235-ya, 40, 40);
+//makeRectangle(237-xa, 228-ya, 40, 40);
+
+roiManager("Add");
+
+makeOval(235-xa, 112-ya, 40, 40); 
+roiManager("Add");
+
+makeOval(94-xa, 234-ya, 40, 40); 
+roiManager("Add");
+
+makeOval(236-xa, 350-ya, 40, 40); 
+roiManager("Add");
+
+makeOval(378-xa, 236-ya, 40, 40); 
+roiManager("Add");
+
+// Save ROIs Jpegs
+roiManager("Show All");
+run("From ROI Manager");
+saveAs("Jpeg", "C:\\xampp\\htdocs\\CTQA\\ROIs\\ECTER18\\viewH01.jpg");
+
+
+roiManager("Measure");
+
+
+HELrect1mean = getResult("Mean", 0);
+HELrect1SD = getResult("StdDev", 0);
+
+HELrect2mean = getResult("Mean", 1);
+HELrect2SD = getResult("StdDev", 1);
+
+HELrect3mean = getResult("Mean", 2);
+HELrect3SD = getResult("StdDev", 2);
+
+HELrect4mean = getResult("Mean", 3);
+HELrect4SD = getResult("StdDev", 3);
+
+HELrect5mean = getResult("Mean", 4);
+HELrect5SD = getResult("StdDev", 4);
+
+HELDiff = (HELrect1mean - HELrect2mean);
+
+roiManager("Delete");
+
+run("Clear Results");
+close();
+
+
+nf = "C:/images/logs/ECTER18/ECTER18_" + DT + ".txt";
+f=File.open(nf); 
+// High Contrast Data
+print(f, "ContrastDiff " + Diff);
+print(f, "\n");
+print(f, "HRrect1mean " + HRrect1mean);
+print(f, "\n");
+print(f, "HRrect1SD " + HRrect1SD);
+print(f, "\n");
+print(f, "HRrect2mean " + HRrect2mean);
+print(f, "\n");
+print(f, "HRrect2SD " + HRrect2SD);
+print(f, "\n");
+print(f, "HRrect3mean " + HRrect3mean);
+print(f, "\n");
+print(f, "HRrect3SD " + HRrect3SD);
+print(f, "\n");
+print(f, "HRrect4mean " + HRrect4mean);
+print(f, "\n");
+print(f, "HRrect4SD " + HRrect4SD);
+print(f, "\n");
+print(f, "HRrect5mean " + HRrect5mean);
+print(f, "\n");
+print(f, "HRrect5SD " + HRrect5SD);
+print(f, "\n");
+print(f, "HRrect6mean " + HRrect6mean);
+print(f, "\n");
+print(f, "HRrect6SD " + HRrect6SD);
+print(f, "\n");
+print(f, "HRrect7mean " + HRrect7mean);
+print(f, "\n");
+print(f, "HRrect7SD " + HRrect7SD);
+print(f, "\n");
+print(f, "HRrect8mean " + HRrect8mean);
+print(f, "\n");
+print(f, "HRrect8SD " + HRrect8SD);
+print(f, "\n");
+// Low Contrast Data
+//print(f, "LCrect1mean " + LCrect1mean);
+//print(f, "\n");
+//print(f, "LCrect1SD " + LCrect1SD);
+//print(f, "\n");
+//print(f, "LCrect2mean " + LCrect2mean);
+//print(f, "\n");
+//print(f, "LCrect2SD " + LCrect2SD);
+//print(f, "\n");
+//print(f, "LCrect3mean " + LCrect3mean);
+//print(f, "\n");
+//print(f, "LCrect3SD " + LCrect3SD);
+//print(f, "\n");
+//print(f, "LCrect4mean " + LCrect4mean);
+//print(f, "\n");
+//print(f, "LCrect4SD " + LCrect4SD);
+//print(f, "\n");
+// Uniformity Data
+print(f, "UNrect1mean " + UNrect1mean);
+print(f, "\n");
+print(f, "UNrect1SD " + UNrect1SD);
+print(f, "\n");
+print(f, "UNrect2mean " + UNrect2mean);
+print(f, "\n");
+print(f, "UNrect2SD " + UNrect2SD);
+print(f, "\n");
+print(f, "UNrect3mean " + UNrect3mean);
+print(f, "\n");
+print(f, "UNrect3SD " + UNrect3SD);
+print(f, "\n");
+print(f, "UNrect4mean " + UNrect4mean);
+print(f, "\n");
+print(f, "UNrect4SD " + UNrect4SD);
+print(f, "\n");
+print(f, "UNrect5mean " + UNrect5mean);
+print(f, "\n");
+print(f, "UNrect5SD " + UNrect5SD);
+print(f, "\n");
+print(f, "UNDiff " + UNDiff);
+print(f, "\n");
+// Helical Water Image
+print(f, "HELrect1mean " + HELrect1mean);
+print(f, "\n");
+print(f, "HELrect1SD " + HELrect1SD);
+print(f, "\n");
+print(f, "HELrect2mean " + HELrect2mean);
+print(f, "\n");
+print(f, "HELrect2SD " + HELrect2SD);
+print(f, "\n");
+print(f, "HELrect3mean " + HELrect3mean);
+print(f, "\n");
+print(f, "HELrect3SD " + HELrect3SD);
+print(f, "\n");
+print(f, "HELrect4mean " + HELrect4mean);
+print(f, "\n");
+print(f, "HELrect4SD " + HELrect4SD);
+print(f, "\n");
+print(f, "HELrect5mean " + HELrect5mean);
+print(f, "\n");
+print(f, "HELrect5SD " + HELrect5SD);
+print(f, "\n");
+print(f, "HELDiff " + HELDiff);
+print(f, "\n");
+
+run("Quit");
